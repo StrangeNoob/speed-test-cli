@@ -9,12 +9,35 @@ import (
 	"speed-test-cli/internal/speedtest"
 )
 
-func TestProgressPrinterUpdates(t *testing.T) {
+func TestProgressPrinterAnimates(t *testing.T) {
 	var buf bytes.Buffer
-	p := NewProgressPrinter(&buf)
+	p := NewProgressPrinter(&buf, true)
+	p(speedtest.Progress{Phase: speedtest.PhaseDownload, Mbps: 20})
 	p(speedtest.Progress{Phase: speedtest.PhaseDownload, Mbps: 50})
-	if buf.Len() == 0 {
-		t.Errorf("expected progress output, got none")
+	p(speedtest.Progress{Phase: speedtest.PhaseUpload, Mbps: 10})
+	out := buf.String()
+
+	if !strings.Contains(out, "Download") || !strings.Contains(out, "Upload") {
+		t.Errorf("expected both phase labels, got:\n%q", out)
+	}
+	if !strings.Contains(out, "\n") {
+		t.Errorf("expected a newline at the phase boundary, got:\n%q", out)
+	}
+	if !strings.Contains(out, "\r") {
+		t.Errorf("expected carriage-return redraws, got:\n%q", out)
+	}
+	if !strings.ContainsAny(out, strings.Join(spinnerFrames, "")) {
+		t.Errorf("expected a spinner frame, got:\n%q", out)
+	}
+}
+
+func TestProgressPrinterNoAnimateSilent(t *testing.T) {
+	var buf bytes.Buffer
+	p := NewProgressPrinter(&buf, false)
+	p(speedtest.Progress{Phase: speedtest.PhaseDownload, Mbps: 20})
+	p(speedtest.Progress{Phase: speedtest.PhaseUpload, Mbps: 5})
+	if buf.Len() != 0 {
+		t.Errorf("non-animating printer must produce no output, got:\n%q", buf.String())
 	}
 }
 

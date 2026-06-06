@@ -9,11 +9,47 @@ import (
 	"speed-test-cli/internal/speedtest"
 )
 
-// NewProgressPrinter returns a ProgressFunc that prints a live, single-line
-// throughput readout to w for each update.
-func NewProgressPrinter(w io.Writer) speedtest.ProgressFunc {
+// liveBarWidth is the cell width of the live progress bar.
+const liveBarWidth = 20
+
+// NewProgressPrinter returns a ProgressFunc that renders a live, single-line
+// spinner + auto-scaling bar + throughput to w. When animate is false it
+// produces no output. The bar scales to the peak Mbps seen so far in the
+// current phase; a phase change finalizes the previous line with a newline.
+func NewProgressPrinter(w io.Writer, animate bool) speedtest.ProgressFunc {
+	st := NewStyler(true)
+	var current speedtest.Phase
+	var peak float64
+	frame := 0
+	label := map[speedtest.Phase]string{
+		speedtest.PhaseDownload: "Download",
+		speedtest.PhaseUpload:   "Upload  ",
+	}
 	return func(p speedtest.Progress) {
-		fmt.Fprintf(w, "\r%-8s %.1f Mbps   ", p.Phase, p.Mbps)
+		if !animate {
+			return
+		}
+		if p.Phase != current {
+			if current != "" {
+				fmt.Fprint(w, "\n")
+			}
+			current = p.Phase
+			peak = 0
+		}
+		if p.Mbps > peak {
+			peak = p.Mbps
+		}
+		spin := spinnerFrames[frame%len(spinnerFrames)]
+		frame++
+		bar := renderBar(p.Mbps, peak, liveBarWidth)
+		name := label[p.Phase]
+		if name == "" {
+			name = string(p.Phase)
+		}
+		fmt.Fprintf(w, "\r%s  %s  %s%s%s  %.1f %s   ",
+			st.Cyan(spin), st.Cyan(name),
+			st.Dim("▕"), st.Green(bar), st.Dim("▏"),
+			p.Mbps, st.Dim("Mbps"))
 	}
 }
 
