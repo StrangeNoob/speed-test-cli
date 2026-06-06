@@ -33,9 +33,16 @@ func (c *Client) measureDownload(cfg Config, progress ProgressFunc) (float64, er
 		go func() {
 			defer wg.Done()
 			buf := make([]byte, 64*1024)
+			var lastProgress time.Time
 			for ctx.Err() == nil {
-				url := c.DownURL + "?bytes=" + strconv.Itoa(downloadChunkBytes)
-				req, _ := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+				reqURL := c.DownURL + "?bytes=" + strconv.Itoa(downloadChunkBytes)
+				req, err := http.NewRequestWithContext(ctx, http.MethodGet, reqURL, nil)
+				if err != nil {
+					if ctx.Err() == nil {
+						errOnce.Do(func() { firstErr = err })
+					}
+					return
+				}
 				resp, err := c.HTTP.Do(req)
 				if err != nil {
 					if ctx.Err() == nil {
@@ -47,7 +54,8 @@ func (c *Client) measureDownload(cfg Config, progress ProgressFunc) (float64, er
 					n, rerr := resp.Body.Read(buf)
 					if n > 0 && time.Now().After(warmEnd) {
 						atomic.AddInt64(&counted, int64(n))
-						if progress != nil {
+						if progress != nil && time.Since(lastProgress) > 100*time.Millisecond {
+							lastProgress = time.Now()
 							elapsed := time.Since(warmEnd)
 							progress(Progress{Phase: PhaseDownload, Mbps: Mbps(atomic.LoadInt64(&counted), elapsed)})
 						}

@@ -1,7 +1,6 @@
 package speedtest
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -57,5 +56,4 @@ func TestMeasureDownloadCallsProgress(t *testing.T) {
 	if calls == 0 {
 		t.Fatalf("expected progress callback to be called at least once")
 	}
-	_ = fmt.Sprint(calls)
 }
