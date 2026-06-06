@@ -9,6 +9,15 @@ import (
 	"speed-test-cli/internal/speedtest"
 )
 
+func TestProgressPrinterUpdates(t *testing.T) {
+	var buf bytes.Buffer
+	p := NewProgressPrinter(&buf)
+	p(speedtest.Progress{Phase: speedtest.PhaseDownload, Mbps: 50})
+	if buf.Len() == 0 {
+		t.Errorf("expected progress output, got none")
+	}
+}
+
 func TestHumanSummaryContainsMetrics(t *testing.T) {
 	res := speedtest.Result{
 		ServerColo:   "SIN",

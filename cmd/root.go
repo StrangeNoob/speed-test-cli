@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"time"
@@ -61,16 +62,22 @@ func run(o options) error {
 	var progress speedtest.ProgressFunc
 	if !o.json {
 		fmt.Fprintln(os.Stderr, "Testing… (Cloudflare)")
+		progress = output.NewProgressPrinter(os.Stderr)
 	}
 
 	res, err := client.Run(o.toConfig(), progress)
 	if err != nil {
 		if o.json {
-			fmt.Fprintf(os.Stderr, `{"error":%q}`+"\n", err.Error())
+			enc := json.NewEncoder(os.Stderr)
+			_ = enc.Encode(map[string]string{"error": err.Error()})
 		} else {
 			fmt.Fprintf(os.Stderr, "speed test failed: %v\n", err)
 		}
 		return err
+	}
+
+	if !o.json {
+		fmt.Fprintln(os.Stderr)
 	}
 
 	if o.json {
