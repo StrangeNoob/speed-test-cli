@@ -6,8 +6,13 @@ Cloudflare's public speed-test endpoints.
 ## Install
 
 ```bash
-go build -o speed-test .
+CGO_ENABLED=0 go build -o speed-test .
 ```
+
+> **Note:** `CGO_ENABLED=0` is required on macOS 26 (Tahoe) with Go 1.22, where
+> CGO-enabled binaries crash at launch with `missing LC_UUID load command`. This
+> project is pure Go, so disabling CGO is safe. On unaffected toolchains a plain
+> `go build -o speed-test .` works too.
 
 ## Usage
 
