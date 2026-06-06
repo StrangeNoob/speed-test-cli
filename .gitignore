@@ -1,0 +1,5 @@
+speed-test
+speed-test-cli
+/dist/
+*.jsonl
+.DS_Store
