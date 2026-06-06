@@ -60,3 +60,25 @@ func IsTerminal(f *os.File) bool {
 	}
 	return fi.Mode()&os.ModeCharDevice != 0
 }
+
+// Styler wraps text in ANSI color codes when enabled, or returns it unchanged.
+type Styler struct {
+	enabled bool
+}
+
+// NewStyler returns a Styler that emits color codes only when enabled.
+func NewStyler(enabled bool) *Styler {
+	return &Styler{enabled: enabled}
+}
+
+func (s *Styler) wrap(code, text string) string {
+	if !s.enabled {
+		return text
+	}
+	return "\x1b[" + code + "m" + text + "\x1b[0m"
+}
+
+func (s *Styler) Cyan(text string) string  { return s.wrap("36", text) }
+func (s *Styler) Green(text string) string { return s.wrap("32", text) }
+func (s *Styler) Dim(text string) string   { return s.wrap("2", text) }
+func (s *Styler) Bold(text string) string  { return s.wrap("1", text) }
