@@ -66,7 +66,11 @@ func parseServerTiming(h string) time.Duration {
 func (c *Client) measureLatency(n int) (ping, jit time.Duration, err error) {
 	samples := make([]time.Duration, 0, n)
 	for i := 0; i < n; i++ {
-		req, _ := http.NewRequest(http.MethodGet, c.DownURL+"?bytes=0", nil)
+		req, e := http.NewRequest(http.MethodGet, c.DownURL+"?bytes=0", nil)
+		if e != nil {
+			err = e
+			continue
+		}
 		start := time.Now()
 		resp, e := c.HTTP.Do(req)
 		if e != nil {

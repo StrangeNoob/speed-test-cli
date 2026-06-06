@@ -1,6 +1,7 @@
 package speedtest
 
 import (
+	"net/http"
 	"testing"
 	"time"
 )
@@ -51,5 +52,16 @@ func TestParseServerTiming(t *testing.T) {
 func TestParseServerTimingMissing(t *testing.T) {
 	if got := parseServerTiming("cfCacheStatus;desc=HIT"); got != 0 {
 		t.Fatalf("parseServerTiming = %v, want 0", got)
+	}
+}
+
+func TestMeasureLatencyBadURLNoPanic(t *testing.T) {
+	c := &Client{HTTP: http.DefaultClient, DownURL: "://bad url"}
+	ping, jit, err := c.measureLatency(2)
+	if err == nil {
+		t.Fatalf("expected an error for a malformed DownURL")
+	}
+	if ping != 0 || jit != 0 {
+		t.Fatalf("expected zero ping/jitter on total failure, got ping=%v jit=%v", ping, jit)
 	}
 }
