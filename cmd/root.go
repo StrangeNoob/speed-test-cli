@@ -21,6 +21,7 @@ type options struct {
 	logFile      string
 	downloadOnly bool
 	uploadOnly   bool
+	noColor      bool
 }
 
 func (o options) toConfig() speedtest.Config {
@@ -49,6 +50,7 @@ func newRootCmd() *cobra.Command {
 	f.StringVar(&o.logFile, "log-file", "", "History file path (default ~/.speed-test/history.jsonl)")
 	f.BoolVar(&o.downloadOnly, "download-only", false, "Skip upload test")
 	f.BoolVar(&o.uploadOnly, "upload-only", false, "Skip download test")
+	f.BoolVar(&o.noColor, "no-color", false, "Disable colored output")
 	cmd.MarkFlagsMutuallyExclusive("download-only", "upload-only")
 	return cmd
 }
@@ -63,10 +65,13 @@ func Execute() {
 func run(o options) error {
 	client := speedtest.NewClient()
 
+	noColorEnv := os.Getenv("NO_COLOR")
+	animate := output.ShouldColor(output.IsTerminal(os.Stderr), o.noColor, noColorEnv)
+
 	var progress speedtest.ProgressFunc
 	if !o.json {
 		fmt.Fprintln(os.Stderr, "Testing… (Cloudflare)")
-		progress = output.NewProgressPrinter(os.Stderr)
+		progress = output.NewProgressPrinter(os.Stderr, animate)
 	}
 
 	res, err := client.Run(o.toConfig(), progress)
@@ -80,16 +85,16 @@ func run(o options) error {
 		return err
 	}
 
-	if !o.json {
-		fmt.Fprintln(os.Stderr)
-	}
-
 	if o.json {
 		if err := output.JSON(os.Stdout, res); err != nil {
 			return err
 		}
 	} else {
-		output.Human(os.Stdout, res)
+		if animate {
+			fmt.Fprintln(os.Stderr)
+		}
+		summarySt := output.NewStyler(output.ShouldColor(output.IsTerminal(os.Stdout), o.noColor, noColorEnv))
+		output.Human(os.Stdout, res, summarySt)
 	}
 
 	if !o.noLog {
