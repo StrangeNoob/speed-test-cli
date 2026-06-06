@@ -53,3 +53,25 @@ func TestRenderBarHalf(t *testing.T) {
 		t.Errorf("half bar = %q, want 4 full + 4 spaces", got)
 	}
 }
+
+func TestShouldColor(t *testing.T) {
+	for _, tc := range []struct {
+		name      string
+		isTTY     bool
+		noColor   bool
+		noColorNV string
+		want      bool
+	}{
+		{"tty no flags", true, false, "", true},
+		{"not a tty", false, false, "", false},
+		{"flag set", true, true, "", false},
+		{"NO_COLOR set", true, false, "1", false},
+		{"NO_COLOR empty value but present treated as unset", true, false, "", true},
+		{"all off", false, true, "1", false},
+	} {
+		if got := ShouldColor(tc.isTTY, tc.noColor, tc.noColorNV); got != tc.want {
+			t.Errorf("%s: ShouldColor(%v,%v,%q) = %v, want %v",
+				tc.name, tc.isTTY, tc.noColor, tc.noColorNV, got, tc.want)
+		}
+	}
+}
