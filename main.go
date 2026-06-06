@@ -1,7 +1,7 @@
 package main
 
-import "fmt"
+import "speed-test-cli/cmd"
 
 func main() {
-	fmt.Println("speed-test-cli")
+	cmd.Execute()
 }
