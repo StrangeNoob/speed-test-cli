@@ -76,3 +76,13 @@ func TestHumanSummaryColorEmitsEscapes(t *testing.T) {
 		t.Errorf("enabled styler should emit ANSI escapes:\n%s", buf.String())
 	}
 }
+
+func TestHumanSummaryZeroRendersDash(t *testing.T) {
+	res := speedtest.Result{ServerColo: "SIN", DownloadMbps: 100, UploadMbps: 0}
+	var buf bytes.Buffer
+	Human(&buf, res, NewStyler(false))
+	out := buf.String()
+	if !strings.Contains(out, "—") {
+		t.Errorf("a zero direction should render an em-dash, got:\n%s", out)
+	}
+}

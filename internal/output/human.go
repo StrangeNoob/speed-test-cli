@@ -17,7 +17,7 @@ const liveBarWidth = 20
 // produces no output. The bar scales to the peak Mbps seen so far in the
 // current phase; a phase change finalizes the previous line with a newline.
 func NewProgressPrinter(w io.Writer, animate bool) speedtest.ProgressFunc {
-	st := NewStyler(true)
+	st := NewStyler(animate)
 	var current speedtest.Phase
 	var peak float64
 	frame := 0
@@ -81,7 +81,7 @@ func Human(w io.Writer, res speedtest.Result, st *Styler) {
 // writeRate renders one labeled throughput row with a scaled bar.
 func writeRate(w io.Writer, st *Styler, label string, mbps, scale float64) {
 	if mbps <= 0 {
-		fmt.Fprintf(w, "%s  %s  %s\n", st.Cyan(label), st.Dim("▕"+spaces(barWidth)+"▏"), st.Dim("—"))
+		fmt.Fprintf(w, "%s  %s  %s\n", st.Cyan(label), st.Dim("▕"+strings.Repeat(" ", barWidth)+"▏"), st.Dim("—"))
 		return
 	}
 	bar := renderBar(mbps, scale, barWidth)
@@ -93,6 +93,3 @@ func fmtMs(d time.Duration) string {
 	return fmt.Sprintf("%.1f ms", float64(d.Microseconds())/1000)
 }
 
-func spaces(n int) string {
-	return strings.Repeat(" ", n)
-}
