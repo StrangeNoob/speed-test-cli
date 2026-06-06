@@ -2,6 +2,8 @@ package speedtest
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"sync"
@@ -12,14 +14,21 @@ import (
 // downloadChunkBytes is the per-request payload size requested from the server.
 const downloadChunkBytes = 25_000_000
 
+// rateLimitBackoff is how long a stream waits before retrying after an HTTP 429.
+// It is a var (not const) so tests can shorten it. Shared by download and upload.
+var rateLimitBackoff = 1 * time.Second
+
 // measureDownload runs `cfg.Streams` parallel download loops for up to
-// `cfg.Duration`, discarding a warm-up window of cfg.Duration/5, and
-// returns throughput in Mbps.
+// `cfg.Duration`, discarding a warm-up window of cfg.Duration/5, and returns
+// throughput in Mbps. Non-2xx responses are never counted; an HTTP 429 triggers
+// a short backoff and retry; if no data is measured the call returns an error
+// rather than a bogus 0 Mbps.
 func (c *Client) measureDownload(cfg Config, progress ProgressFunc) (float64, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), cfg.Duration)
 	defer cancel()
 
 	var counted int64 // bytes counted after warm-up
+	var rateLimited int32
 	start := time.Now()
 	warmDuration := cfg.Duration / 5
 	warmEnd := start.Add(warmDuration)
@@ -50,6 +59,24 @@ func (c *Client) measureDownload(cfg Config, progress ProgressFunc) (float64, er
 					}
 					return
 				}
+				if resp.StatusCode != http.StatusOK {
+					resp.Body.Close()
+					if resp.StatusCode == http.StatusTooManyRequests {
+						atomic.StoreInt32(&rateLimited, 1)
+						select {
+						case <-ctx.Done():
+							return
+						case <-time.After(rateLimitBackoff):
+						}
+						continue
+					}
+					if ctx.Err() == nil {
+						errOnce.Do(func() {
+							firstErr = fmt.Errorf("download: unexpected status %s", resp.Status)
+						})
+					}
+					return
+				}
 				for {
 					n, rerr := resp.Body.Read(buf)
 					if n > 0 && time.Now().After(warmEnd) {
@@ -71,8 +98,16 @@ func (c *Client) measureDownload(cfg Config, progress ProgressFunc) (float64, er
 
 	wg.Wait()
 	elapsed := time.Since(warmEnd)
+	total := atomic.LoadInt64(&counted)
+	if firstErr == nil && total == 0 {
+		if atomic.LoadInt32(&rateLimited) == 1 {
+			firstErr = errors.New("download: rate limited by Cloudflare (wait ~30s and retry)")
+		} else {
+			firstErr = errors.New("download: no data received")
+		}
+	}
 	if elapsed <= 0 {
 		return 0, firstErr
 	}
-	return Mbps(atomic.LoadInt64(&counted), elapsed), firstErr
+	return Mbps(total, elapsed), firstErr
 }
