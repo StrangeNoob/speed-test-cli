@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"io"
 	"testing"
 	"time"
 )
@@ -21,5 +22,15 @@ func TestBuildConfigOnlyFlags(t *testing.T) {
 	cfg := o.toConfig()
 	if !cfg.DownloadOnly {
 		t.Errorf("DownloadOnly not propagated")
+	}
+}
+
+func TestMutuallyExclusiveOnlyFlags(t *testing.T) {
+	cmd := newRootCmd()
+	cmd.SetArgs([]string{"--download-only", "--upload-only"})
+	cmd.SetOut(io.Discard)
+	cmd.SetErr(io.Discard)
+	if err := cmd.Execute(); err == nil {
+		t.Fatal("expected error when both --download-only and --upload-only are set")
 	}
 }

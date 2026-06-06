@@ -32,8 +32,7 @@ func (o options) toConfig() speedtest.Config {
 	}
 }
 
-// Execute runs the root command.
-func Execute() {
+func newRootCmd() *cobra.Command {
 	var o options
 	cmd := &cobra.Command{
 		Use:   "speed-test",
@@ -50,8 +49,13 @@ func Execute() {
 	f.StringVar(&o.logFile, "log-file", "", "History file path (default ~/.speed-test/history.jsonl)")
 	f.BoolVar(&o.downloadOnly, "download-only", false, "Skip upload test")
 	f.BoolVar(&o.uploadOnly, "upload-only", false, "Skip download test")
+	cmd.MarkFlagsMutuallyExclusive("download-only", "upload-only")
+	return cmd
+}
 
-	if err := cmd.Execute(); err != nil {
+// Execute runs the root command.
+func Execute() {
+	if err := newRootCmd().Execute(); err != nil {
 		os.Exit(1)
 	}
 }
