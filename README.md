@@ -27,6 +27,20 @@ speed-test --no-log        # don't append to history
 Results are appended to `~/.speed-test/history.jsonl` (one JSON object per line)
 unless `--no-log` is passed.
 
+## Development
+
+A `Makefile` wraps the common tasks (all with `CGO_ENABLED=0` set):
+
+```bash
+make build       # compile ./speed-test
+make run ARGS="--json --duration 5s"
+make test        # full suite (includes the live network test)
+make test-short  # unit tests only
+make test-race   # full suite with the race detector
+make check       # fmt + vet + race tests (run before committing)
+make help        # list all targets
+```
+
 ## Flags
 
 | Flag | Default | Description |
