@@ -60,3 +60,29 @@ func (c *Client) fetchColo() (string, error) {
 	}
 	return parseColo(string(b)), nil
 }
+
+// Phase identifies which measurement is in progress.
+type Phase string
+
+const (
+	PhaseLatency  Phase = "latency"
+	PhaseDownload Phase = "download"
+	PhaseUpload   Phase = "upload"
+)
+
+// Progress is reported to the callback as bytes flow.
+type Progress struct {
+	Phase Phase
+	Mbps  float64
+}
+
+// ProgressFunc receives live progress; may be nil.
+type ProgressFunc func(Progress)
+
+// Config holds tunable run parameters.
+type Config struct {
+	Streams      int
+	Duration     time.Duration
+	DownloadOnly bool
+	UploadOnly   bool
+}
