@@ -82,3 +82,6 @@ func (s *Styler) Cyan(text string) string  { return s.wrap("36", text) }
 func (s *Styler) Green(text string) string { return s.wrap("32", text) }
 func (s *Styler) Dim(text string) string   { return s.wrap("2", text) }
 func (s *Styler) Bold(text string) string  { return s.wrap("1", text) }
+
+// spinnerFrames is a braille spinner animation cycle.
+var spinnerFrames = []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"}

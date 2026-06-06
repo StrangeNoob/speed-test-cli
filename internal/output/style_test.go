@@ -54,6 +54,17 @@ func TestRenderBarHalf(t *testing.T) {
 	}
 }
 
+func TestSpinnerFramesNonEmpty(t *testing.T) {
+	if len(spinnerFrames) == 0 {
+		t.Fatal("spinnerFrames must not be empty")
+	}
+	for i, f := range spinnerFrames {
+		if f == "" {
+			t.Errorf("spinnerFrames[%d] is empty", i)
+		}
+	}
+}
+
 func TestStylerEnabledWraps(t *testing.T) {
 	st := NewStyler(true)
 	got := st.Cyan("hi")
