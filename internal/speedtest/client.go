@@ -86,3 +86,38 @@ type Config struct {
 	DownloadOnly bool
 	UploadOnly   bool
 }
+
+// Run executes the configured measurements and returns a populated Result.
+// Latency runs first, then download and/or upload per cfg flags.
+func (c *Client) Run(cfg Config, progress ProgressFunc) (Result, error) {
+	res := Result{Timestamp: time.Now()}
+
+	if colo, err := c.fetchColo(); err == nil {
+		res.ServerColo = colo
+	}
+
+	ping, jit, err := c.measureLatency(20)
+	if err != nil && ping == 0 {
+		return res, err
+	}
+	res.Latency = ping
+	res.Jitter = jit
+
+	if !cfg.UploadOnly {
+		d, err := c.measureDownload(cfg, progress)
+		if err != nil {
+			return res, err
+		}
+		res.DownloadMbps = d
+	}
+
+	if !cfg.DownloadOnly {
+		u, err := c.measureUpload(cfg, progress)
+		if err != nil {
+			return res, err
+		}
+		res.UploadMbps = u
+	}
+
+	return res, nil
+}
