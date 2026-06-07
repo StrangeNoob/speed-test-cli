@@ -1,6 +1,7 @@
 package speedtest
 
 import (
+	"strings"
 	"testing"
 	"time"
 )
@@ -14,6 +15,11 @@ func TestRealCloudflare(t *testing.T) {
 	cfg := Config{Streams: 4, Duration: 5 * time.Second}
 	res, err := c.Run(cfg, nil)
 	if err != nil {
+		// Cloudflare rate-limits aggressive back-to-back runs; that's a transient
+		// network condition, not a code defect, so skip rather than fail.
+		if strings.Contains(err.Error(), "rate limited") {
+			t.Skipf("skipping: Cloudflare rate-limited this run (%v)", err)
+		}
 		t.Fatalf("live Run error: %v", err)
 	}
 	if res.DownloadMbps <= 0 {
