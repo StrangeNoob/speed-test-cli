@@ -14,7 +14,13 @@ go install github.com/StrangeNoob/speed-test-cli/cmd/speed-test@latest
 ```
 
 This installs the `speed-test` command into your Go bin directory
-(`$(go env GOBIN)`, or `$(go env GOPATH)/bin` — make sure it's on your `PATH`).
+(`$(go env GOBIN)`, or `$(go env GOPATH)/bin` — make sure it's on your `PATH`,
+e.g. add `export PATH="$(go env GOPATH)/bin:$PATH"` to your shell profile).
+
+> **macOS 26 (Tahoe) + Go 1.22:** prefix the command with `CGO_ENABLED=0`, i.e.
+> `CGO_ENABLED=0 go install github.com/StrangeNoob/speed-test-cli/cmd/speed-test@latest`.
+> Otherwise the installed binary crashes at launch with
+> `missing LC_UUID load command`. The project is pure Go, so disabling CGO is safe.
 
 ### Prebuilt binaries
 
