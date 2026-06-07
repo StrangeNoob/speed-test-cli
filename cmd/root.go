@@ -224,9 +224,3 @@ func runUpdate(versionRaw string) error {
 	fmt.Fprintf(os.Stderr, "Updated speed-test %s → %s.\n", versionRaw, newV)
 	return nil
 }
-
-// newUpdateCmd is implemented in update.go (Task 7). Temporary stub so the
-// package compiles; replaced in the next task.
-func newUpdateCmd(versionRaw string) *cobra.Command {
-	return &cobra.Command{Use: "update", Short: "Update speed-test to the latest release", RunE: func(_ *cobra.Command, _ []string) error { return nil }}
-}

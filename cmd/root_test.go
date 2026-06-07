@@ -87,3 +87,17 @@ func TestBuildVersionBarePlainBuild(t *testing.T) {
 		t.Errorf("buildVersion with default commit/date = %q, want 9.9.9", got)
 	}
 }
+
+func TestUpdateSubcommandRegistered(t *testing.T) {
+	cmd := newRootCmd("test", "v0.1.0")
+	cmd.SetArgs([]string{"update", "--help"})
+	cmd.SetOut(io.Discard)
+	cmd.SetErr(io.Discard)
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("`update --help` should work without network, got: %v", err)
+	}
+	sub, _, err := cmd.Find([]string{"update"})
+	if err != nil || sub.Name() != "update" {
+		t.Fatalf("update subcommand not registered: %v", err)
+	}
+}
