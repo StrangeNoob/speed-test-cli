@@ -10,10 +10,10 @@ Cloudflare's public speed-test endpoints.
 ### Go toolchain (any platform)
 
 ```bash
-go install github.com/StrangeNoob/speed-test-cli@latest
+go install github.com/StrangeNoob/speed-test-cli/cmd/speed-test@latest
 ```
 
-This installs the `speed-test-cli` command into your Go bin directory
+This installs the `speed-test` command into your Go bin directory
 (`$(go env GOBIN)`, or `$(go env GOPATH)/bin` — make sure it's on your `PATH`).
 
 ### Prebuilt binaries
@@ -27,7 +27,7 @@ then `chmod +x` it and move it onto your `PATH`.
 ```bash
 make build            # compile ./speed-test in the repo
 make install          # copy it to /usr/local/bin (run from anywhere as `speed-test`)
-make go-install       # or install via the Go toolchain (command: speed-test-cli)
+make go-install       # or install via the Go toolchain (also `speed-test`)
 make uninstall        # remove the binary installed by `make install`
 ```
 
