@@ -1,5 +1,6 @@
-speed-test
-speed-test-cli
+# Built binaries at the repo root (anchored so cmd/speed-test/ is NOT ignored)
+/speed-test
+/speed-test-cli
 /dist/
 *.jsonl
 .DS_Store
