@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+
 func TestBuildConfigDefaults(t *testing.T) {
 	o := options{streams: 6, duration: 12 * time.Second}
 	cfg := o.toConfig()
@@ -28,7 +29,7 @@ func TestBuildConfigOnlyFlags(t *testing.T) {
 }
 
 func TestMutuallyExclusiveOnlyFlags(t *testing.T) {
-	cmd := newRootCmd("test")
+	cmd := newRootCmd("test", "v0.1.0")
 	cmd.SetArgs([]string{"--download-only", "--upload-only"})
 	cmd.SetOut(io.Discard)
 	cmd.SetErr(io.Discard)
@@ -38,7 +39,7 @@ func TestMutuallyExclusiveOnlyFlags(t *testing.T) {
 }
 
 func TestNoColorFlagParses(t *testing.T) {
-	cmd := newRootCmd("test")
+	cmd := newRootCmd("test", "v0.1.0")
 	cmd.SetArgs([]string{"--no-color", "--help"})
 	cmd.SetOut(io.Discard)
 	cmd.SetErr(io.Discard)
@@ -48,7 +49,7 @@ func TestNoColorFlagParses(t *testing.T) {
 }
 
 func TestVersionFlag(t *testing.T) {
-	cmd := newRootCmd("1.2.3 (commit abc, built 2026-06-07)")
+	cmd := newRootCmd("1.2.3 (commit abc, built 2026-06-07)", "v1.2.3")
 	cmd.SetArgs([]string{"--version"})
 	var buf bytes.Buffer
 	cmd.SetOut(&buf)
@@ -59,6 +60,16 @@ func TestVersionFlag(t *testing.T) {
 	out := buf.String()
 	if !strings.Contains(out, "speed-test 1.2.3") || !strings.Contains(out, "commit abc") {
 		t.Errorf("unexpected --version output: %q", out)
+	}
+}
+
+func TestNoUpdateCheckFlagParses(t *testing.T) {
+	cmd := newRootCmd("test", "v0.1.0")
+	cmd.SetArgs([]string{"--no-update-check", "--help"})
+	cmd.SetOut(io.Discard)
+	cmd.SetErr(io.Discard)
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("--no-update-check should be a valid flag, got: %v", err)
 	}
 }
 

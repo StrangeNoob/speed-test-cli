@@ -20,9 +20,10 @@ type options struct {
 	streams      int
 	duration     time.Duration
 	logFile      string
-	downloadOnly bool
-	uploadOnly   bool
-	noColor      bool
+	downloadOnly  bool
+	uploadOnly    bool
+	noColor       bool
+	noUpdateCheck bool
 }
 
 func (o options) toConfig() speedtest.Config {
@@ -34,14 +35,14 @@ func (o options) toConfig() speedtest.Config {
 	}
 }
 
-func newRootCmd(version string) *cobra.Command {
+func newRootCmd(versionDisplay, versionRaw string) *cobra.Command {
 	var o options
 	cmd := &cobra.Command{
 		Use:     "speed-test",
 		Short:   "Measure internet speed against Cloudflare",
-		Version: version,
+		Version: versionDisplay,
 		RunE: func(_ *cobra.Command, _ []string) error {
-			return run(o)
+			return run(o, versionRaw)
 		},
 	}
 	cmd.SetVersionTemplate("speed-test {{.Version}}\n")
@@ -55,36 +56,42 @@ func newRootCmd(version string) *cobra.Command {
 	f.BoolVar(&o.uploadOnly, "upload-only", false, "Skip download test")
 	f.BoolVar(&o.noColor, "no-color", false, "Disable colored output")
 	cmd.MarkFlagsMutuallyExclusive("download-only", "upload-only")
+	f.BoolVar(&o.noUpdateCheck, "no-update-check", false, "Disable the GitHub update check")
+	cmd.AddCommand(newUpdateCmd(versionRaw))
 	return cmd
 }
 
 // Execute runs the root command. version/commit/date are injected at build time
 // (via -ldflags by GoReleaser); pass the defaults otherwise.
 func Execute(version, commit, date string) {
-	if err := newRootCmd(buildVersion(version, commit, date)).Execute(); err != nil {
+	if err := newRootCmd(buildVersion(version, commit, date), resolveVersion(version)).Execute(); err != nil {
 		os.Exit(1)
 	}
 }
 
-// buildVersion assembles the string shown by `--version`. When no version was
-// stamped in (a plain `go build`), it falls back to the module version recorded
-// in the binary's build info, so `go install ...@vX.Y.Z` still reports correctly.
-func buildVersion(version, commit, date string) string {
-	v := version
-	if v == "dev" {
+// resolveVersion returns the bare version, falling back to the module version
+// recorded in the binary's build info for `go install`-built binaries.
+func resolveVersion(version string) string {
+	if version == "dev" {
 		if info, ok := debug.ReadBuildInfo(); ok {
 			if mv := info.Main.Version; mv != "" && mv != "(devel)" {
-				v = mv
+				return mv
 			}
 		}
 	}
+	return version
+}
+
+// buildVersion assembles the string shown by `--version`.
+func buildVersion(version, commit, date string) string {
+	v := resolveVersion(version)
 	if commit != "none" || date != "unknown" {
 		return fmt.Sprintf("%s (commit %s, built %s)", v, commit, date)
 	}
 	return v
 }
 
-func run(o options) error {
+func run(o options, versionRaw string) error {
 	client := speedtest.NewClient()
 
 	noColorEnv := os.Getenv("NO_COLOR")
@@ -134,4 +141,10 @@ func run(o options) error {
 		}
 	}
 	return nil
+}
+
+// newUpdateCmd is implemented in update.go (Task 7). Temporary stub so the
+// package compiles; replaced in the next task.
+func newUpdateCmd(versionRaw string) *cobra.Command {
+	return &cobra.Command{Use: "update", Short: "Update speed-test to the latest release", RunE: func(_ *cobra.Command, _ []string) error { return nil }}
 }
