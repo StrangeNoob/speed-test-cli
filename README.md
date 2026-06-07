@@ -96,3 +96,18 @@ make help        # list all targets
 | `--download-only` | false | Skip upload test |
 | `--upload-only` | false | Skip download test |
 | `--no-color` | false | Disable colored output |
+| `--no-update-check` | false | Disable the GitHub update check |
+
+## Updating
+
+`speed-test` checks GitHub for a newer release at most once a day and, on an
+interactive terminal, offers to update in place. To update explicitly:
+
+```bash
+speed-test update
+```
+
+Disable the passive check with `--no-update-check` or `SPEEDTEST_NO_UPDATE_CHECK=1`.
+If the binary lives in a directory you can't write to (e.g. a system path or a
+Homebrew install), `update` will tell you to use your install method or rerun
+with elevated permissions.
