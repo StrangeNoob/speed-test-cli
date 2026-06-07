@@ -1,5 +1,7 @@
 # speed-test-cli
 
+[![CI](https://github.com/StrangeNoob/speed-test-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/StrangeNoob/speed-test-cli/actions/workflows/ci.yml)
+
 A command-line internet speed test (download, upload, ping, jitter) powered by
 Cloudflare's public speed-test endpoints.
 
