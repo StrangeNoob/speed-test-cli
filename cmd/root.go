@@ -204,6 +204,8 @@ func maybeReportUpdate(ch chan string, versionRaw string) {
 		fmt.Fprintln(os.Stderr, "Run 'speed-test update' to upgrade.")
 		return
 	}
+	// runUpdate prints its own outcome (including failures) to stderr; the speed
+	// test already succeeded, so we don't fail the run on a self-update error.
 	_ = runUpdate(versionRaw)
 }
 

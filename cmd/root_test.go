@@ -101,3 +101,19 @@ func TestUpdateSubcommandRegistered(t *testing.T) {
 		t.Fatalf("update subcommand not registered: %v", err)
 	}
 }
+
+func TestStartUpdateCheckDisabledReturnsNil(t *testing.T) {
+	// The check must be skipped (no goroutine, no output) for json/flag/dev so
+	// stdout stays clean and scripted runs aren't disturbed.
+	for _, o := range []options{
+		{json: true},
+		{noUpdateCheck: true},
+	} {
+		if ch := startUpdateCheck(o, "v0.1.0"); ch != nil {
+			t.Errorf("startUpdateCheck(%+v) = non-nil, want nil (check disabled)", o)
+		}
+	}
+	if ch := startUpdateCheck(options{}, "dev"); ch != nil {
+		t.Error("startUpdateCheck for a dev build should be nil")
+	}
+}
