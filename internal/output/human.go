@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"speed-test-cli/internal/speedtest"
+	"github.com/StrangeNoob/speed-test-cli/internal/speedtest"
 )
 
 // liveBarWidth is the cell width of the live progress bar.

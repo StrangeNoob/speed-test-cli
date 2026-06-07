@@ -8,6 +8,10 @@ export CGO_ENABLED := 0
 BINARY := speed-test
 PKG    := ./...
 
+# Install location for `make install`. Override e.g. `make install PREFIX=$HOME/.local`.
+PREFIX ?= /usr/local
+BINDIR ?= $(PREFIX)/bin
+
 .DEFAULT_GOAL := build
 
 ## build: compile the CLI binary
@@ -19,6 +23,27 @@ build:
 .PHONY: run
 run: build
 	./$(BINARY) $(ARGS)
+
+## install: build and copy the binary into BINDIR (default /usr/local/bin) to run from anywhere
+.PHONY: install
+install: build
+	install -d "$(BINDIR)"
+	install -m 0755 $(BINARY) "$(BINDIR)/$(BINARY)"
+	@echo "Installed $(BINARY) -> $(BINDIR)/$(BINARY)"
+	@echo "(if /usr/local/bin is not writable, re-run with sudo, or: make install PREFIX=$$HOME/.local)"
+
+## uninstall: remove the binary installed by `make install`
+.PHONY: uninstall
+uninstall:
+	rm -f "$(BINDIR)/$(BINARY)"
+	@echo "Removed $(BINDIR)/$(BINARY)"
+
+## go-install: install via the Go toolchain into GOBIN/GOPATH bin (command: speed-test-cli)
+.PHONY: go-install
+go-install:
+	go install .
+	@dir=$$(go env GOBIN); [ -n "$$dir" ] || dir=$$(go env GOPATH)/bin; \
+		echo "Installed 'speed-test-cli' -> $$dir (ensure it is on your PATH)"
 
 ## test: run the full test suite (includes the live Cloudflare network test)
 .PHONY: test

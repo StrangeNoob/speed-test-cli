@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"io"
 
-	"speed-test-cli/internal/speedtest"
+	"github.com/StrangeNoob/speed-test-cli/internal/speedtest"
 )
 
 // JSON writes the result as a single-line JSON object to w.

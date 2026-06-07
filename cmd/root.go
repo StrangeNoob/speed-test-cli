@@ -8,9 +8,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"speed-test-cli/internal/history"
-	"speed-test-cli/internal/output"
-	"speed-test-cli/internal/speedtest"
+	"github.com/StrangeNoob/speed-test-cli/internal/history"
+	"github.com/StrangeNoob/speed-test-cli/internal/output"
+	"github.com/StrangeNoob/speed-test-cli/internal/speedtest"
 )
 
 type options struct {

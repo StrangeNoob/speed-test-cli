@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"speed-test-cli/internal/speedtest"
+	"github.com/StrangeNoob/speed-test-cli/internal/speedtest"
 )
 
 // Append writes the result as one JSON line to the file at path, creating
