@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -12,6 +13,7 @@ import (
 	"github.com/StrangeNoob/speed-test-cli/internal/history"
 	"github.com/StrangeNoob/speed-test-cli/internal/output"
 	"github.com/StrangeNoob/speed-test-cli/internal/speedtest"
+	"github.com/StrangeNoob/speed-test-cli/internal/update"
 )
 
 type options struct {
@@ -93,6 +95,7 @@ func buildVersion(version, commit, date string) string {
 
 func run(o options, versionRaw string) error {
 	client := speedtest.NewClient()
+	updCh := startUpdateCheck(o, versionRaw)
 
 	noColorEnv := os.Getenv("NO_COLOR")
 	animate := output.ShouldColor(output.IsTerminal(os.Stderr), o.noColor, noColorEnv)
@@ -140,6 +143,85 @@ func run(o options, versionRaw string) error {
 			}
 		}
 	}
+	maybeReportUpdate(updCh, versionRaw)
+	return nil
+}
+
+// startUpdateCheck launches the throttled GitHub check in the background so it
+// overlaps the speed test. It returns nil when checking is disabled.
+func startUpdateCheck(o options, versionRaw string) chan string {
+	if !update.ShouldCheck(o.json, o.noUpdateCheck, os.Getenv("SPEEDTEST_NO_UPDATE_CHECK"), versionRaw) {
+		return nil
+	}
+	ch := make(chan string, 1)
+	go func() {
+		path, err := update.DefaultCachePath()
+		if err != nil {
+			ch <- ""
+			return
+		}
+		c := update.Load(path)
+		if !update.Due(c, time.Now(), update.CheckInterval) {
+			ch <- c.LatestVersion
+			return
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		latest, err := update.Latest(ctx)
+		if err != nil || latest == "" {
+			ch <- c.LatestVersion // fall back to the cached value
+			return
+		}
+		_ = update.Save(path, update.Cache{LastCheck: time.Now(), LatestVersion: latest})
+		ch <- latest
+	}()
+	return ch
+}
+
+// maybeReportUpdate reads the background check result (with a short guard) and,
+// if a newer version exists, notifies or prompts per interactivity.
+func maybeReportUpdate(ch chan string, versionRaw string) {
+	if ch == nil {
+		return
+	}
+	var latest string
+	select {
+	case latest = <-ch:
+	case <-time.After(2 * time.Second):
+		return
+	}
+	if latest == "" || !update.Newer(versionRaw, latest) {
+		return
+	}
+	interactive := update.ShouldPrompt(output.IsTerminal(os.Stdin) && output.IsTerminal(os.Stdout))
+	if !interactive {
+		fmt.Fprintf(os.Stderr, "\nUpdate available: %s — run 'speed-test update'.\n", latest)
+		return
+	}
+	fmt.Fprintf(os.Stderr, "\nA new version %s is available (you have %s).\n", latest, versionRaw)
+	yes, _ := update.PromptYesNo(os.Stdin, os.Stderr, "Update now? [y/N] ")
+	if !yes {
+		fmt.Fprintln(os.Stderr, "Run 'speed-test update' to upgrade.")
+		return
+	}
+	_ = runUpdate(versionRaw)
+}
+
+// runUpdate performs the self-update and prints the outcome. Shared by the
+// prompt path and the `update` subcommand.
+func runUpdate(versionRaw string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+	newV, err := update.Apply(ctx, versionRaw)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Could not update: %v.\nIf you installed via go install or a package manager, update with that instead; otherwise re-run with sufficient permissions (e.g. sudo).\n", err)
+		return err
+	}
+	if newV == "" {
+		fmt.Fprintf(os.Stderr, "speed-test is up to date (%s).\n", versionRaw)
+		return nil
+	}
+	fmt.Fprintf(os.Stderr, "Updated speed-test %s → %s.\n", versionRaw, newV)
 	return nil
 }
 
