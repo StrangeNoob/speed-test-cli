@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"runtime/debug"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -33,15 +34,17 @@ func (o options) toConfig() speedtest.Config {
 	}
 }
 
-func newRootCmd() *cobra.Command {
+func newRootCmd(version string) *cobra.Command {
 	var o options
 	cmd := &cobra.Command{
-		Use:   "speed-test",
-		Short: "Measure internet speed against Cloudflare",
+		Use:     "speed-test",
+		Short:   "Measure internet speed against Cloudflare",
+		Version: version,
 		RunE: func(_ *cobra.Command, _ []string) error {
 			return run(o)
 		},
 	}
+	cmd.SetVersionTemplate("speed-test {{.Version}}\n")
 	f := cmd.Flags()
 	f.BoolVar(&o.json, "json", false, "Machine-readable JSON output")
 	f.BoolVar(&o.noLog, "no-log", false, "Don't append to the history file")
@@ -55,11 +58,30 @@ func newRootCmd() *cobra.Command {
 	return cmd
 }
 
-// Execute runs the root command.
-func Execute() {
-	if err := newRootCmd().Execute(); err != nil {
+// Execute runs the root command. version/commit/date are injected at build time
+// (via -ldflags by GoReleaser); pass the defaults otherwise.
+func Execute(version, commit, date string) {
+	if err := newRootCmd(buildVersion(version, commit, date)).Execute(); err != nil {
 		os.Exit(1)
 	}
+}
+
+// buildVersion assembles the string shown by `--version`. When no version was
+// stamped in (a plain `go build`), it falls back to the module version recorded
+// in the binary's build info, so `go install ...@vX.Y.Z` still reports correctly.
+func buildVersion(version, commit, date string) string {
+	v := version
+	if v == "dev" {
+		if info, ok := debug.ReadBuildInfo(); ok {
+			if mv := info.Main.Version; mv != "" && mv != "(devel)" {
+				v = mv
+			}
+		}
+	}
+	if commit != "none" || date != "unknown" {
+		return fmt.Sprintf("%s (commit %s, built %s)", v, commit, date)
+	}
+	return v
 }
 
 func run(o options) error {

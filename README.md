@@ -60,6 +60,7 @@ speed-test --json          # machine-readable JSON
 speed-test --download-only # skip upload
 speed-test --streams 8 --duration 15s
 speed-test --no-log        # don't append to history
+speed-test --version       # print version, commit, and build date
 ```
 
 Results are appended to `~/.speed-test/history.jsonl` (one JSON object per line)

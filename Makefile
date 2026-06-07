@@ -9,6 +9,10 @@ BINARY := speed-test
 PKG    := ./...
 MAIN   := ./cmd/speed-test
 
+# Stamp a version into the binary (git tag/sha; "dev" outside a git checkout).
+VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
+LDFLAGS := -X main.version=$(VERSION)
+
 # Install location for `make install`. Override e.g. `make install PREFIX=$HOME/.local`.
 PREFIX ?= /usr/local
 BINDIR ?= $(PREFIX)/bin
@@ -18,7 +22,7 @@ BINDIR ?= $(PREFIX)/bin
 ## build: compile the CLI binary
 .PHONY: build
 build:
-	go build -o $(BINARY) $(MAIN)
+	go build -ldflags "$(LDFLAGS)" -o $(BINARY) $(MAIN)
 
 ## run: build and run the CLI (pass args via ARGS="--json --duration 5s")
 .PHONY: run
@@ -42,7 +46,7 @@ uninstall:
 ## go-install: install via the Go toolchain into GOBIN/GOPATH bin (command: speed-test)
 .PHONY: go-install
 go-install:
-	go install $(MAIN)
+	go install -ldflags "$(LDFLAGS)" $(MAIN)
 	@dir=$$(go env GOBIN); [ -n "$$dir" ] || dir=$$(go env GOPATH)/bin; \
 		echo "Installed '$(BINARY)' -> $$dir (ensure it is on your PATH)"
 

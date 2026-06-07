@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"bytes"
 	"io"
+	"strings"
 	"testing"
 	"time"
 )
@@ -26,7 +28,7 @@ func TestBuildConfigOnlyFlags(t *testing.T) {
 }
 
 func TestMutuallyExclusiveOnlyFlags(t *testing.T) {
-	cmd := newRootCmd()
+	cmd := newRootCmd("test")
 	cmd.SetArgs([]string{"--download-only", "--upload-only"})
 	cmd.SetOut(io.Discard)
 	cmd.SetErr(io.Discard)
@@ -36,11 +38,41 @@ func TestMutuallyExclusiveOnlyFlags(t *testing.T) {
 }
 
 func TestNoColorFlagParses(t *testing.T) {
-	cmd := newRootCmd()
+	cmd := newRootCmd("test")
 	cmd.SetArgs([]string{"--no-color", "--help"})
 	cmd.SetOut(io.Discard)
 	cmd.SetErr(io.Discard)
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("--no-color should be a valid flag, got: %v", err)
+	}
+}
+
+func TestVersionFlag(t *testing.T) {
+	cmd := newRootCmd("1.2.3 (commit abc, built 2026-06-07)")
+	cmd.SetArgs([]string{"--version"})
+	var buf bytes.Buffer
+	cmd.SetOut(&buf)
+	cmd.SetErr(&buf)
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("--version should not error: %v", err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "speed-test 1.2.3") || !strings.Contains(out, "commit abc") {
+		t.Errorf("unexpected --version output: %q", out)
+	}
+}
+
+func TestBuildVersionFormatsComponents(t *testing.T) {
+	got := buildVersion("1.2.3", "deadbeef", "2026-06-07T00:00:00Z")
+	want := "1.2.3 (commit deadbeef, built 2026-06-07T00:00:00Z)"
+	if got != want {
+		t.Errorf("buildVersion = %q, want %q", got, want)
+	}
+}
+
+func TestBuildVersionBarePlainBuild(t *testing.T) {
+	// With the sentinel defaults and no build info override, the version is bare.
+	if got := buildVersion("9.9.9", "none", "unknown"); got != "9.9.9" {
+		t.Errorf("buildVersion with default commit/date = %q, want 9.9.9", got)
 	}
 }
