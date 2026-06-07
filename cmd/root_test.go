@@ -8,7 +8,6 @@ import (
 	"time"
 )
 
-
 func TestBuildConfigDefaults(t *testing.T) {
 	o := options{streams: 6, duration: 12 * time.Second}
 	cfg := o.toConfig()

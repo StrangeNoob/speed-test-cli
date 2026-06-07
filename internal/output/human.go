@@ -92,4 +92,3 @@ func writeRate(w io.Writer, st *Styler, label string, mbps, scale float64) {
 func fmtMs(d time.Duration) string {
 	return fmt.Sprintf("%.1f ms", float64(d.Microseconds())/1000)
 }
-

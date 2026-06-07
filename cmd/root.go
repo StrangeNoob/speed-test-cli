@@ -17,11 +17,11 @@ import (
 )
 
 type options struct {
-	json         bool
-	noLog        bool
-	streams      int
-	duration     time.Duration
-	logFile      string
+	json          bool
+	noLog         bool
+	streams       int
+	duration      time.Duration
+	logFile       string
 	downloadOnly  bool
 	uploadOnly    bool
 	noColor       bool
