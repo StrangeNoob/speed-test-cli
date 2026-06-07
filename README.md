@@ -27,6 +27,10 @@ speed-test --no-log        # don't append to history
 Results are appended to `~/.speed-test/history.jsonl` (one JSON object per line)
 unless `--no-log` is passed.
 
+Output is colored with live progress bars when run in a terminal; colors and
+animation are disabled automatically when piped/redirected, when `NO_COLOR` is
+set, or with `--no-color`.
+
 ## Development
 
 A `Makefile` wraps the common tasks (all with `CGO_ENABLED=0` set):
@@ -52,3 +56,4 @@ make help        # list all targets
 | `--log-file` | `~/.speed-test/history.jsonl` | History file path |
 | `--download-only` | false | Skip upload test |
 | `--upload-only` | false | Skip download test |
+| `--no-color` | false | Disable colored output |

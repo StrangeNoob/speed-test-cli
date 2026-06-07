@@ -34,3 +34,13 @@ func TestMutuallyExclusiveOnlyFlags(t *testing.T) {
 		t.Fatal("expected error when both --download-only and --upload-only are set")
 	}
 }
+
+func TestNoColorFlagParses(t *testing.T) {
+	cmd := newRootCmd()
+	cmd.SetArgs([]string{"--no-color", "--help"})
+	cmd.SetOut(io.Discard)
+	cmd.SetErr(io.Discard)
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("--no-color should be a valid flag, got: %v", err)
+	}
+}
