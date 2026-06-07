@@ -10,6 +10,7 @@ func TestNewer(t *testing.T) {
 		{"v0.1.5", "v0.2.0", true},
 		{"0.1.5", "0.2.0", true},
 		{"v0.1.5", "v0.1.5", false},
+		{"v0.1.5", "0.1.5", false}, // mixed prefix: go-selfupdate strips the v
 		{"v0.2.0", "v0.1.5", false},
 		{"dev", "v0.2.0", false},
 		{"v0.1.5", "garbage", false},
@@ -28,6 +29,7 @@ func TestUpToDate(t *testing.T) {
 		want            bool
 	}{
 		{"v0.2.0", "v0.2.0", true},
+		{"v0.1.5", "0.1.5", true}, // mixed prefix: go-selfupdate strips the v
 		{"v0.3.0", "v0.2.0", true},
 		{"v0.1.0", "v0.2.0", false},
 		{"dev", "v0.2.0", false},
