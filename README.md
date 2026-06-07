@@ -24,9 +24,16 @@ e.g. add `export PATH="$(go env GOPATH)/bin:$PATH"` to your shell profile).
 
 ### Prebuilt binaries
 
-Download the binary for your platform from the
+Download the archive for your platform from the
 [latest release](https://github.com/StrangeNoob/speed-test-cli/releases/latest),
-then `chmod +x` it and move it onto your `PATH`.
+extract it, and move the `speed-test` binary onto your `PATH`:
+
+```bash
+tar xzf speed-test_<version>_<os>_<arch>.tar.gz   # or unzip on Windows
+sudo mv speed-test /usr/local/bin/
+```
+
+Verify the download against `checksums.txt` from the release.
 
 ### From source (with make)
 
