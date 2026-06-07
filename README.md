@@ -7,14 +7,37 @@ Cloudflare's public speed-test endpoints.
 
 ## Install
 
+### Go toolchain (any platform)
+
 ```bash
-CGO_ENABLED=0 go build -o speed-test .
+go install github.com/StrangeNoob/speed-test-cli@latest
 ```
 
-> **Note:** `CGO_ENABLED=0` is required on macOS 26 (Tahoe) with Go 1.22, where
-> CGO-enabled binaries crash at launch with `missing LC_UUID load command`. This
-> project is pure Go, so disabling CGO is safe. On unaffected toolchains a plain
-> `go build -o speed-test .` works too.
+This installs the `speed-test-cli` command into your Go bin directory
+(`$(go env GOBIN)`, or `$(go env GOPATH)/bin` — make sure it's on your `PATH`).
+
+### Prebuilt binaries
+
+Download the binary for your platform from the
+[latest release](https://github.com/StrangeNoob/speed-test-cli/releases/latest),
+then `chmod +x` it and move it onto your `PATH`.
+
+### From source (with make)
+
+```bash
+make build            # compile ./speed-test in the repo
+make install          # copy it to /usr/local/bin (run from anywhere as `speed-test`)
+make go-install       # or install via the Go toolchain (command: speed-test-cli)
+make uninstall        # remove the binary installed by `make install`
+```
+
+`make install` defaults to `/usr/local/bin`; if that needs root, either run
+`sudo make install` or pick a user-writable dir: `make install PREFIX=$HOME/.local`.
+
+> **Note:** the Makefile sets `CGO_ENABLED=0` for every target. This is required
+> on macOS 26 (Tahoe) with Go 1.22, where CGO-enabled binaries crash at launch
+> with `missing LC_UUID load command`. The project is pure Go, so disabling CGO
+> is safe; on unaffected toolchains a plain `go build -o speed-test .` works too.
 
 ## Usage
 

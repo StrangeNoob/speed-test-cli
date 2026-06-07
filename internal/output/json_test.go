@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"speed-test-cli/internal/speedtest"
+	"github.com/StrangeNoob/speed-test-cli/internal/speedtest"
 )
 
 func TestJSONContainsFields(t *testing.T) {

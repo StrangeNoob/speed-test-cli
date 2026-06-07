@@ -1,6 +1,6 @@
 package main
 
-import "speed-test-cli/cmd"
+import "github.com/StrangeNoob/speed-test-cli/cmd"
 
 func main() {
 	cmd.Execute()
