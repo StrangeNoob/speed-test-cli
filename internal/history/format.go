@@ -3,10 +3,12 @@ package history
 import (
 	"encoding/csv"
 	"encoding/json"
+	"fmt"
 	"io"
 	"strconv"
 	"time"
 
+	"github.com/StrangeNoob/speed-test-cli/internal/output"
 	"github.com/StrangeNoob/speed-test-cli/internal/speedtest"
 )
 
@@ -43,4 +45,36 @@ func JSON(w io.Writer, records []speedtest.Result) error {
 	}
 	_, err = w.Write(append(b, '\n'))
 	return err
+}
+
+// Table renders records newest-first as an aligned table. total is the full
+// record count before any --last window, used for the footer. The header is
+// colored and the footer dimmed via st; a disabled styler emits plain text.
+func Table(w io.Writer, records []speedtest.Result, total int, st *output.Styler) {
+	fmt.Fprintf(w, "%s\n\n", st.Bold(fmt.Sprintf("Last %d speed tests", len(records))))
+	header := fmt.Sprintf("%-17s  %12s  %12s  %8s  %8s", "Date/Time", "Download", "Upload", "Ping", "Jitter")
+	fmt.Fprintln(w, st.Cyan(header))
+	for i := len(records) - 1; i >= 0; i-- {
+		r := records[i]
+		fmt.Fprintf(w, "%-17s  %7.1f Mbps  %7.1f Mbps  %5.0f ms  %5.0f ms\n",
+			r.Timestamp.Local().Format("02 Jan 2006 15:04"),
+			r.DownloadMbps, r.UploadMbps, msOf(r.Latency), msOf(r.Jitter))
+	}
+	fmt.Fprintf(w, "\n%s\n", st.Dim(fmt.Sprintf("showing %d of %d", len(records), total)))
+}
+
+// RenderSummary renders the avg/min/max stats block from a computed Summary.
+func RenderSummary(w io.Writer, s Summary, st *output.Styler) {
+	dateRange := fmt.Sprintf("%s – %s", s.First.Local().Format("02 Jan"), s.Last.Local().Format("02 Jan"))
+	fmt.Fprintf(w, "%s  %s\n\n",
+		st.Bold("Speed Test Summary"),
+		st.Dim(fmt.Sprintf("(%d runs, %s)", s.Count, dateRange)))
+	fmt.Fprintln(w, st.Cyan(fmt.Sprintf("%-10s %8s %8s %8s", "", "Avg", "Min", "Max")))
+	row := func(label string, m metricStats, unit string) {
+		fmt.Fprintf(w, "%-10s %8.1f %8.1f %8.1f   %s\n", label, m.Avg, m.Min, m.Max, st.Dim(unit))
+	}
+	row("Download", s.Download, "Mbps")
+	row("Upload", s.Upload, "Mbps")
+	row("Ping", s.Ping, "ms")
+	row("Jitter", s.Jitter, "ms")
 }
