@@ -120,10 +120,14 @@ Every run is appended to `~/.speed-test/history.jsonl`. View and analyze it:
 ```bash
 speed-test history                 # table of the last 20 runs (newest first)
 speed-test history --last 50       # last 50 (use --last 0 for all)
+speed-test history --since 7d      # only the last 7 days (also 24h, 30m)
+speed-test history --since 2026-06-01 --until 2026-06-07   # a date range
 speed-test history --summary       # avg/min/max for download, upload, ping, jitter
 speed-test history --export csv  > runs.csv    # or: --out runs.csv
 speed-test history --export json > runs.json
 ```
 
-`--log-file` reads a different file; `--no-color` (or piping / `NO_COLOR`)
-disables coloring.
+`--since`/`--until` accept `YYYY-MM-DD`, `YYYY-MM-DD HH:MM`, or a relative
+duration (`7d`/`24h`/`30m`); a bare `--until` date includes the whole day. They
+combine with `--last`, `--summary`, and `--export`. `--log-file` reads a
+different file; `--no-color` (or piping / `NO_COLOR`) disables coloring.
