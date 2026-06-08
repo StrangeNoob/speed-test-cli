@@ -62,6 +62,7 @@ speed-test --streams 8 --duration 15s
 speed-test --no-log        # don't append to history
 speed-test --version       # print version, commit, and build date
 speed-test history         # show recent runs (table)
+speed-test compare         # is my connection better/normal/worse than usual?
 ```
 
 Results are appended to `~/.speed-test/history.jsonl` (one JSON object per line)
@@ -131,3 +132,20 @@ speed-test history --export json > runs.json
 duration (`7d`/`24h`/`30m`); a bare `--until` date includes the whole day. They
 combine with `--last`, `--summary`, and `--export`. `--log-file` reads a
 different file; `--no-color` (or piping / `NO_COLOR`) disables coloring.
+
+## Compare
+
+`speed-test compare` runs a test and tells you whether your connection is
+**better, normal, or degraded** versus the median of your own recent results.
+
+```bash
+speed-test compare                       # run a test, compare to the last 10
+speed-test compare --last 30             # baseline = median of the last 30
+speed-test compare --window 7d           # baseline = runs in the last 7 days
+speed-test compare --latest              # compare the most recent saved run (no new test)
+speed-test compare --plan-download 200 --plan-upload 100   # vs your ISP plan
+speed-test compare --json
+```
+
+The baseline uses the **median** (so one bad test doesn't skew it). `--last` and
+`--window` are mutually exclusive; `--no-log` skips saving the fresh test.
