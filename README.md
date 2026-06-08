@@ -61,6 +61,7 @@ speed-test --download-only # skip upload
 speed-test --streams 8 --duration 15s
 speed-test --no-log        # don't append to history
 speed-test --version       # print version, commit, and build date
+speed-test history         # show recent runs (table)
 ```
 
 Results are appended to `~/.speed-test/history.jsonl` (one JSON object per line)
@@ -111,3 +112,18 @@ Disable the passive check with `--no-update-check` or `SPEEDTEST_NO_UPDATE_CHECK
 If the binary lives in a directory you can't write to (e.g. a system path or a
 Homebrew install), `update` will tell you to use your install method or rerun
 with elevated permissions.
+
+## History
+
+Every run is appended to `~/.speed-test/history.jsonl`. View and analyze it:
+
+```bash
+speed-test history                 # table of the last 20 runs (newest first)
+speed-test history --last 50       # last 50 (use --last 0 for all)
+speed-test history --summary       # avg/min/max for download, upload, ping, jitter
+speed-test history --export csv  > runs.csv    # or: --out runs.csv
+speed-test history --export json > runs.json
+```
+
+`--log-file` reads a different file; `--no-color` (or piping / `NO_COLOR`)
+disables coloring.
