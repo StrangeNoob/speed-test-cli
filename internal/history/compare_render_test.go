@@ -51,6 +51,17 @@ func TestRenderCompareNoBaseline(t *testing.T) {
 	}
 }
 
+func TestRenderCompareUndefinedMetric(t *testing.T) {
+	// A prior run with upload 0 → upload median 0 → undefined → renders "—".
+	cur := speedtest.Result{DownloadMbps: 100, UploadMbps: 50, Latency: 20 * time.Millisecond, Jitter: 4 * time.Millisecond}
+	base := []speedtest.Result{{DownloadMbps: 90, UploadMbps: 0, Latency: 20 * time.Millisecond, Jitter: 4 * time.Millisecond}}
+	var buf bytes.Buffer
+	RenderCompare(&buf, Compare(cur, base), PlanInfo{}, output.NewStyler(false))
+	if !strings.Contains(buf.String(), "—") {
+		t.Errorf("undefined metric should render a dash:\n%s", buf.String())
+	}
+}
+
 func TestRenderComparePlan(t *testing.T) {
 	var buf bytes.Buffer
 	RenderCompare(&buf, cmpFixture(), PlanInfo{Set: true, Download: 200, Upload: 100}, output.NewStyler(false))

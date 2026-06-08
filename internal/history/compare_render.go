@@ -143,7 +143,9 @@ func renderMetricLine(w io.Writer, st *output.Styler, label string, mc MetricCom
 		fmt.Fprintf(w, "  %-9s %s\n", label, st.Dim("—"))
 		return
 	}
-	delta := fmt.Sprintf("%+.1f%%", mc.DeltaPct)
+	// Pad to a fixed width BEFORE coloring so ANSI escape bytes don't throw off
+	// the column alignment when color is enabled.
+	delta := fmt.Sprintf("%8s", fmt.Sprintf("%+.1f%%", mc.DeltaPct))
 	var colored, phrase string
 	switch mc.Status {
 	case StatusBetter:
@@ -164,5 +166,5 @@ func renderMetricLine(w io.Writer, st *output.Styler, label string, mc MetricCom
 		colored = st.Dim(delta)
 		phrase = "normal"
 	}
-	fmt.Fprintf(w, "  %-9s %8s  %s\n", label, colored, st.Dim(phrase))
+	fmt.Fprintf(w, "  %-9s %s  %s\n", label, colored, st.Dim(phrase))
 }

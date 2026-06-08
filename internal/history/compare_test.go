@@ -79,6 +79,7 @@ func TestCompareVerdicts(t *testing.T) {
 		{"normal", mkResult(100, 50, 20, 4), "normal"},
 		{"unstable from jitter", mkResult(100, 50, 20, 8), "unstable"},
 		{"normal high latency", mkResult(100, 50, 23, 4), "normal_high_latency"},
+		{"excellent high latency", mkResult(125, 50, 23, 4), "excellent_high_latency"},
 	}
 	for _, tc := range cases {
 		if got := Compare(tc.cur, base).Verdict; got != tc.verdict {
