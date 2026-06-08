@@ -2,6 +2,7 @@ package history
 
 import (
 	"bytes"
+	"encoding/json"
 	"strings"
 	"testing"
 	"time"
@@ -56,5 +57,43 @@ func TestRenderComparePlan(t *testing.T) {
 	out := buf.String()
 	if !strings.Contains(out, "Plan performance") || !strings.Contains(out, "/ 200 Mbps") {
 		t.Errorf("missing plan section:\n%s", out)
+	}
+}
+
+func TestRenderCompareJSON(t *testing.T) {
+	var buf bytes.Buffer
+	if err := RenderCompareJSON(&buf, cmpFixture(), PlanInfo{Set: true, Download: 200, Upload: 100}); err != nil {
+		t.Fatal(err)
+	}
+	var got map[string]any
+	if err := json.Unmarshal(buf.Bytes(), &got); err != nil {
+		t.Fatalf("invalid JSON: %v", err)
+	}
+	if got["verdict"] == nil || got["summary"] == nil {
+		t.Errorf("missing verdict/summary: %v", got)
+	}
+	if got["baseline"] == nil {
+		t.Error("baseline should be present when there is a baseline")
+	}
+	if got["plan"] == nil {
+		t.Error("plan should be present when set")
+	}
+}
+
+func TestRenderCompareJSONNoBaseline(t *testing.T) {
+	var buf bytes.Buffer
+	c := Compare(speedtest.Result{DownloadMbps: 100}, nil)
+	if err := RenderCompareJSON(&buf, c, PlanInfo{}); err != nil {
+		t.Fatal(err)
+	}
+	var got map[string]any
+	if err := json.Unmarshal(buf.Bytes(), &got); err != nil {
+		t.Fatal(err)
+	}
+	if v, ok := got["baseline"]; !ok || v != nil {
+		t.Errorf("baseline should be null with no history, got %v", v)
+	}
+	if _, ok := got["plan"]; ok {
+		t.Error("plan should be omitted when unset")
 	}
 }
