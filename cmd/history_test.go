@@ -1,11 +1,13 @@
 package cmd
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestHistoryHelp(t *testing.T) {
@@ -52,10 +54,14 @@ func writeHistory(t *testing.T) string {
 	t.Helper()
 	dir := t.TempDir()
 	path := filepath.Join(dir, "history.jsonl")
-	content := `{"timestamp":"2026-06-01T12:00:00Z","download_mbps":10}
-{"timestamp":"2026-06-05T12:00:00Z","download_mbps":20}
-{"timestamp":"2026-06-09T12:00:00Z","download_mbps":30}
-`
+	// Local-time records (noon on each day) so date-bound comparisons hold in
+	// any machine timezone — a fixed-UTC fixture would break an end-of-local-day
+	// --until on far-eastern offsets.
+	mk := func(day int) string {
+		ts := time.Date(2026, 6, day, 12, 0, 0, 0, time.Local).Format(time.RFC3339)
+		return fmt.Sprintf(`{"timestamp":%q,"download_mbps":%d}`, ts, day*10)
+	}
+	content := mk(1) + "\n" + mk(5) + "\n" + mk(9) + "\n"
 	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -117,6 +123,17 @@ func TestHistoryInvalidSince(t *testing.T) {
 	cmd.SetErr(io.Discard)
 	if err := cmd.Execute(); err == nil {
 		t.Fatal("expected error for --since nonsense")
+	}
+}
+
+func TestHistoryInvalidUntil(t *testing.T) {
+	hist := writeHistory(t)
+	cmd := newRootCmd("test", "v0.1.0")
+	cmd.SetArgs([]string{"history", "--log-file", hist, "--until", "5x"})
+	cmd.SetOut(io.Discard)
+	cmd.SetErr(io.Discard)
+	if err := cmd.Execute(); err == nil {
+		t.Fatal("expected error for --until 5x")
 	}
 }
 
