@@ -60,6 +60,7 @@ func newRootCmd(versionDisplay, versionRaw string) *cobra.Command {
 	cmd.MarkFlagsMutuallyExclusive("download-only", "upload-only")
 	f.BoolVar(&o.noUpdateCheck, "no-update-check", false, "Disable the GitHub update check")
 	cmd.AddCommand(newUpdateCmd(versionRaw))
+	cmd.AddCommand(newHistoryCmd())
 	return cmd
 }
 
