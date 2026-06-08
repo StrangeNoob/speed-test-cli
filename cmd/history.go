@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -17,6 +18,8 @@ type historyOptions struct {
 	out     string
 	logFile string
 	noColor bool
+	since   string
+	until   string
 }
 
 func newHistoryCmd() *cobra.Command {
@@ -36,11 +39,14 @@ func newHistoryCmd() *cobra.Command {
 	f.StringVar(&o.out, "out", "", "With --export, write to this file instead of stdout")
 	f.StringVar(&o.logFile, "log-file", "", "History file to read (default ~/.speed-test/history.jsonl)")
 	f.BoolVar(&o.noColor, "no-color", false, "Disable colored output")
+	f.StringVar(&o.since, "since", "", "Only runs at/after this time (YYYY-MM-DD, 'YYYY-MM-DD HH:MM', or 7d/24h/30m)")
+	f.StringVar(&o.until, "until", "", "Only runs at/before this time (same formats; a bare date includes the whole day)")
 	cmd.MarkFlagsMutuallyExclusive("summary", "export")
 	return cmd
 }
 
 const emptyHistoryMsg = "No speed tests recorded yet. Run 'speed-test' to record one."
+const noMatchMsg = "No speed tests match that range."
 
 func runHistory(o historyOptions) error {
 	if o.export != "" && o.export != "csv" && o.export != "json" {
@@ -67,8 +73,20 @@ func runHistory(o historyOptions) error {
 		}
 		fmt.Fprintf(os.Stderr, "(skipped %d unreadable %s)\n", skipped, noun)
 	}
-	total := len(records)
-	window := history.LastN(records, o.last)
+
+	now := time.Now()
+	since, err := history.ParseBound(o.since, false, now)
+	if err != nil {
+		return err
+	}
+	until, err := history.ParseBound(o.until, true, now)
+	if err != nil {
+		return err
+	}
+
+	filtered := history.Filter(records, since, until)
+	total := len(filtered)
+	window := history.LastN(filtered, o.last)
 
 	if o.export != "" {
 		w := os.Stdout
@@ -90,10 +108,16 @@ func runHistory(o historyOptions) error {
 		return output.NewStyler(output.ShouldColor(output.IsTerminal(os.Stdout), o.noColor, os.Getenv("NO_COLOR")))
 	}
 
+	// Distinguish "no history at all" from "none in the chosen range".
+	emptyMsg := emptyHistoryMsg
+	if len(records) > 0 {
+		emptyMsg = noMatchMsg
+	}
+
 	if o.summary {
 		s := history.Summarize(window)
 		if s.Count == 0 {
-			fmt.Fprintln(os.Stderr, emptyHistoryMsg)
+			fmt.Fprintln(os.Stderr, emptyMsg)
 			return nil
 		}
 		history.RenderSummary(os.Stdout, s, styler())
@@ -101,7 +125,7 @@ func runHistory(o historyOptions) error {
 	}
 
 	if len(window) == 0 {
-		fmt.Fprintln(os.Stderr, emptyHistoryMsg)
+		fmt.Fprintln(os.Stderr, emptyMsg)
 		return nil
 	}
 	history.Table(os.Stdout, window, total, styler())
