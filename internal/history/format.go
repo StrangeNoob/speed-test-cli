@@ -51,7 +51,11 @@ func JSON(w io.Writer, records []speedtest.Result) error {
 // record count before any --last window, used for the footer. The header is
 // colored and the footer dimmed via st; a disabled styler emits plain text.
 func Table(w io.Writer, records []speedtest.Result, total int, st *output.Styler) {
-	fmt.Fprintf(w, "%s\n\n", st.Bold(fmt.Sprintf("Last %d speed tests", len(records))))
+	noun := "speed tests"
+	if len(records) == 1 {
+		noun = "speed test"
+	}
+	fmt.Fprintf(w, "%s\n\n", st.Bold(fmt.Sprintf("Last %d %s", len(records), noun)))
 	header := fmt.Sprintf("%-17s  %12s  %12s  %8s  %8s", "Date/Time", "Download", "Upload", "Ping", "Jitter")
 	fmt.Fprintln(w, st.Cyan(header))
 	for i := len(records) - 1; i >= 0; i-- {

@@ -61,7 +61,11 @@ func runHistory(o historyOptions) error {
 		return err
 	}
 	if skipped > 0 {
-		fmt.Fprintf(os.Stderr, "(skipped %d unreadable lines)\n", skipped)
+		noun := "lines"
+		if skipped == 1 {
+			noun = "line"
+		}
+		fmt.Fprintf(os.Stderr, "(skipped %d unreadable %s)\n", skipped, noun)
 	}
 	total := len(records)
 	window := history.LastN(records, o.last)
