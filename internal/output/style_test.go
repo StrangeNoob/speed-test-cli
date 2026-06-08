@@ -78,7 +78,7 @@ func TestStylerEnabledWraps(t *testing.T) {
 
 func TestStylerDisabledPlain(t *testing.T) {
 	st := NewStyler(false)
-	for _, got := range []string{st.Cyan("x"), st.Green("x"), st.Dim("x"), st.Bold("x")} {
+	for _, got := range []string{st.Cyan("x"), st.Green("x"), st.Red("x"), st.Dim("x"), st.Bold("x")} {
 		if got != "x" {
 			t.Errorf("disabled styler should return raw text, got %q", got)
 		}
