@@ -51,4 +51,10 @@ func TestLastN(t *testing.T) {
 	if len(LastN(rs, 100)) != 3 {
 		t.Error("n>len should return all")
 	}
+	if len(LastN(rs, 3)) != 3 {
+		t.Error("n==len should return all")
+	}
+	if len(LastN(rs, -1)) != 3 {
+		t.Error("negative n should return all")
+	}
 }
